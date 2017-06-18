@@ -10,9 +10,10 @@ Contains the token class
 import operator
 
 # define tokens
-INTEGER, OPERATOR, EOF = 'INTEGER', 'OPERATOR', 'EOF'
-operator_set = {'+': operator.add, '-': operator.sub, '*': operator.mul,
-                '/': operator.div}
+INTEGER, OPERATOR1, OPERATOR2, EOF = 'INTEGER', 'OPERATOR1', 'OPERATOR2', 'EOF'
+grouping_set = ['(', ')']
+operator_set_pref1 = {'*': operator.mul, '/': operator.div}
+operator_set_pref2 = {'+': operator.add, '-': operator.sub}
 
 
 class Token(object):

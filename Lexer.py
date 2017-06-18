@@ -7,7 +7,8 @@
 """
 Contains the lexer class for our interpreter
 """
-from Token import Token, INTEGER, OPERATOR, EOF, operator_set
+from Token import Token, INTEGER, OPERATOR1, OPERATOR2, EOF, \
+        operator_set_pref1, operator_set_pref2, grouping_set
 
 
 class Lexer(object):
@@ -64,8 +65,20 @@ class Lexer(object):
         elif self.current_char.isdigit():
             return Token(INTEGER, self.integer())
 
-        elif self.current_char in operator_set.keys():
-            token = Token(OPERATOR, self.current_char)
+        elif self.current_char in grouping_set:
+            token = Token('GROUP', self.current_char)
+            self.advance()
+            print ('Parsed %s, pos is %i' % (self.current_char, self._pos))
+            return token
+
+        elif self.current_char in operator_set_pref1.keys():
+            token = Token(OPERATOR1, self.current_char)
+            self.advance()
+            print ('Parsed Operator %s, pos is %i' % (token.value, self._pos))
+            return token
+
+        elif self.current_char in operator_set_pref2.keys():
+            token = Token(OPERATOR2, self.current_char)
             self.advance()
             print ('Parsed Operator %s, pos is %i' % (token.value, self._pos))
             return token
