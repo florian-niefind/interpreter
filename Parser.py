@@ -58,8 +58,6 @@ class Parser(object):
 
     def __init__(self, text):
         self.lexer = Lexer(text)
-        # read first token
-        self.current_token = self.lexer.get_next_token()
 
     def eat(self, type):
         """Consume a token if it is of the correct type
@@ -86,8 +84,9 @@ class Parser(object):
             node = self.expr()
             self.eat('GROUP')
         elif self.current_token.type == 'INTEGER':
-            node = Num(self.current_token)
+            num_token = self.current_token
             self.eat('INTEGER')
+            node = Num(num_token)
         return node
 
     def term(self):
@@ -97,12 +96,12 @@ class Parser(object):
         :returns: Terms to be added
         """
         print 'TERM'
-        left = self.factor()
+        node = self.factor()
 
         while self.current_token.type == 'OPERATOR1':
-
-            node = OpNode(left, self.current_token, self.factor())
+            op_token = self.current_token
             self.eat('OPERATOR1')
+            node = OpNode(node, op_token, self.factor())
 
         if self.current_token.type in ['EOF', 'OPERATOR2', 'GROUP']:
             return node
@@ -116,14 +115,20 @@ class Parser(object):
         """
         print 'EXPR'
 
-        left = self.term()
+        node = self.term()
 
         while self.current_token.type == 'OPERATOR2':
-
-            node = OpNode(left, self.current_token, self.term())
+            op_token = self.current_token
             self.eat('OPERATOR2')
+            node = OpNode(node, op_token, self.term())
 
         if self.current_token.type in ['EOF', 'GROUP']:
             return node
         else:
             raise Exception('No EOF at end of input, something went wrong')
+
+    def parse(self):
+
+        # read first token
+        self.current_token = self.lexer.get_next_token()
+        return self.expr()

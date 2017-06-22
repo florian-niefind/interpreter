@@ -48,7 +48,7 @@ class Lexer(object):
         while self.current_char is not None and self.current_char.isdigit():
             token += self.current_char
             self.advance()
-        print ('Parsed Integer %s, pos is %i' % (token, self._pos))
+        print ('Lexed Integer %s, pos is %i' % (token, self._pos))
         return int(token)
 
     def get_next_token(self):
@@ -59,7 +59,7 @@ class Lexer(object):
 
         """
         if self.current_char is None:
-            print ('Parsed EOF, pos is %i' % (self._pos))
+            print ('Lexed EOF, pos is %i' % (self._pos))
             return Token(EOF, None)
 
         elif self.current_char.isdigit():
@@ -68,19 +68,19 @@ class Lexer(object):
         elif self.current_char in grouping_set:
             token = Token('GROUP', self.current_char)
             self.advance()
-            print ('Parsed %s, pos is %i' % (self.current_char, self._pos))
+            print ('Lexed %s, pos is %i' % (self.current_char, self._pos))
             return token
 
         elif self.current_char in operator_set_pref1.keys():
             token = Token(OPERATOR1, self.current_char)
             self.advance()
-            print ('Parsed Operator %s, pos is %i' % (token.value, self._pos))
+            print ('Lexed Operator %s, pos is %i' % (token.value, self._pos))
             return token
 
         elif self.current_char in operator_set_pref2.keys():
             token = Token(OPERATOR2, self.current_char)
             self.advance()
-            print ('Parsed Operator %s, pos is %i' % (token.value, self._pos))
+            print ('Lexed Operator %s, pos is %i' % (token.value, self._pos))
             return token
 
         else:
