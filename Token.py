@@ -10,7 +10,8 @@ Contains the token class
 import operator
 
 # define tokens
-INTEGER, OPERATOR1, OPERATOR2, EOF = 'INTEGER', 'OPERATOR1', 'OPERATOR2', 'EOF'
+INTEGER, OPERATOR1, OPERATOR2, GROUP, EOF = ('INTEGER', 'OPERATOR1',
+    'OPERATOR2', 'GROUP', 'EOF')
 grouping_set = ['(', ')']
 operator_set_pref1 = {'*': operator.mul, '/': operator.div}
 operator_set_pref2 = {'+': operator.add, '-': operator.sub}

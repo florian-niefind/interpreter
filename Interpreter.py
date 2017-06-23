@@ -41,8 +41,8 @@ class Interpreter(NodeVisitor):
     def __init__(self, text):
         self.parser = Parser(text)
 
-    def visit_OpNode(self, node):
-        """Visitor for operator node
+    def visit_BinOp(self, node):
+        """Visitor for binary operator node
 
         :node: AST node to be interpreted
         :returns: result of all children
@@ -52,6 +52,18 @@ class Interpreter(NodeVisitor):
         print node._token.value,
         self.visit(node.left)
         self.visit(node.right)
+        print(")"),
+
+    def visit_UnOp(self, node):
+        """Visitor for unary operator node
+
+        :node: AST node to be interpreted
+        :returns: result of all children
+
+        """
+        print("("),
+        print node._token.value,
+        self.visit(node.expr)
         print(")"),
 
     def visit_Num(self, node):

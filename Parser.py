@@ -7,7 +7,7 @@
 """
 Parser
 """
-from Token import operator_set_pref1, operator_set_pref2
+from Token import INTEGER, OPERATOR1, OPERATOR2, GROUP, EOF, operator_set_pref1, operator_set_pref2
 from Lexer import Lexer
 
 
@@ -19,9 +19,9 @@ class AST(object):
         pass
 
 
-class OpNode(AST):
+class BinOp(AST):
 
-    """AST node for operators"""
+    """AST node for binary operators"""
 
     def __init__(self, left, token, right):
         """Constructor
@@ -32,11 +32,26 @@ class OpNode(AST):
         """
         self.left = left
         self._token = token
-        if token.type == 'OPERATOR1':
+        if token.type == OPERATOR1:
             self.op = operator_set_pref1[token.value]
-        elif token.type == 'OPERATOR2':
+        elif token.type == OPERATOR2:
             self.op = operator_set_pref2[token.value]
         self.right = right
+
+
+class UnOp(AST):
+
+    """AST node for unary operators"""
+
+    def __init__(self, token, expr):
+        """Constructor
+
+        :token: operator token
+        :expr: another expression to be modified
+        """
+        self._token = token
+        self.op = token.value
+        self.expr = expr
 
 
 class Num(AST):
@@ -44,7 +59,7 @@ class Num(AST):
     """AST node for a number"""
 
     def __init__(self, token):
-        """TODO: to be defined1.
+        """Constructor
 
         :token: value
         """
@@ -74,18 +89,22 @@ class Parser(object):
 
     def factor(self):
         """
-        Factor rule: (integer| (LPAREN expr RPAREN))
+        Factor rule: (UnOp factor | integer| (LPAREN expr RPAREN))
 
         :return: value of the integer
         """
         print 'FACTOR'
         if self.current_token.value == '(':
-            self.eat('GROUP')
+            self.eat(GROUP)
             node = self.expr()
-            self.eat('GROUP')
-        elif self.current_token.type == 'INTEGER':
+            self.eat(GROUP)
+        elif self.current_token.type == OPERATOR2:
+            unop_token = self.current_token
+            self.eat(OPERATOR2)
+            node = UnOp(unop_token, self.factor())
+        elif self.current_token.type == INTEGER:
             num_token = self.current_token
-            self.eat('INTEGER')
+            self.eat(INTEGER)
             node = Num(num_token)
         return node
 
@@ -98,12 +117,12 @@ class Parser(object):
         print 'TERM'
         node = self.factor()
 
-        while self.current_token.type == 'OPERATOR1':
+        while self.current_token.type == OPERATOR1:
             op_token = self.current_token
-            self.eat('OPERATOR1')
-            node = OpNode(node, op_token, self.factor())
+            self.eat(OPERATOR1)
+            node = BinOp(node, op_token, self.factor())
 
-        if self.current_token.type in ['EOF', 'OPERATOR2', 'GROUP']:
+        if self.current_token.type in [EOF, OPERATOR2, GROUP]:
             return node
 
     def expr(self):
@@ -117,12 +136,12 @@ class Parser(object):
 
         node = self.term()
 
-        while self.current_token.type == 'OPERATOR2':
+        while self.current_token.type == OPERATOR2:
             op_token = self.current_token
-            self.eat('OPERATOR2')
-            node = OpNode(node, op_token, self.term())
+            self.eat(OPERATOR2)
+            node = BinOp(node, op_token, self.term())
 
-        if self.current_token.type in ['EOF', 'GROUP']:
+        if self.current_token.type in [EOF, GROUP]:
             return node
         else:
             raise Exception('No EOF at end of input, something went wrong')
