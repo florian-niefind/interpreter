@@ -12,6 +12,10 @@ import operator
 # define tokens
 INTEGER, OPERATOR1, OPERATOR2, GROUP, EOF = ('INTEGER', 'OPERATOR1',
     'OPERATOR2', 'GROUP', 'EOF')
+# specific pascal tokens
+BEGIN, END, DOT, ASSIGN, SEMI, ID = ('BEGIN', 'END', 'DOT', 'ASSIGN', 'SEMI',
+                                     'ID')
+
 grouping_set = ['(', ')']
 operator_set_pref1 = {'*': operator.mul, '/': operator.div}
 operator_set_pref2 = {'+': operator.add, '-': operator.sub}

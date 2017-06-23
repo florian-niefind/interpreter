@@ -8,8 +8,11 @@
 Contains the lexer class for our interpreter
 """
 from Token import Token, INTEGER, OPERATOR1, OPERATOR2, EOF, \
+        BEGIN, END, DOT, ASSIGN, SEMI, ID, \
         operator_set_pref1, operator_set_pref2, grouping_set
 
+RESERVED_KEYWORDS = {'BEGIN': Token(BEGIN, 'BEGIN'),
+                     'END': Token(END, 'END')}
 
 class Lexer(object):
 
@@ -22,7 +25,7 @@ class Lexer(object):
         :text: The text to be parsed
         """
         # strip whitespace
-        self.text = text.replace(' ', '')
+        self.text = text
         self._pos = 0
         self.current_char = self.text[self._pos]
 
@@ -36,6 +39,33 @@ class Lexer(object):
         else:
             self.current_char = self.text[self._pos]
 
+    def peek(self):
+        """
+        Look ahead in the input stream
+
+        :return: The next character
+        """
+        self.peek_pos = self._pos + 1
+        if self.peek_pos >= len(self.text):
+            return None
+        else:
+            return self.text[self.peek_pos]
+
+    def _id(self):
+        """Check for reserved keywords
+
+        :returns: A fully parsed ID token
+        """
+        token = self.current_char
+        self.advance()
+
+        while self.current_char is not None and self.current_char.isalnum():
+            token += self.current_char
+            self.advance()
+
+        token = RESERVED_KEYWORDS.get(token, Token(ID, token))
+        return token
+
     def integer(self):
         """
         Move integer logic into separate function
@@ -47,9 +77,17 @@ class Lexer(object):
         # check for subsequent digits
         while self.current_char is not None and self.current_char.isdigit():
             token += self.current_char
+            self.advance
+
+        token = Token(INTEGER, int(token))
+        return token
+
+    def skip_whitespace(self):
+        """
+        Skips whitespace
+        """
+        while self.current_char is not None and self.current_char.isspace():
             self.advance()
-        print ('Lexed Integer %s, pos is %i' % (token, self._pos))
-        return int(token)
 
     def get_next_token(self):
         """
@@ -62,11 +100,40 @@ class Lexer(object):
             print ('Lexed EOF, pos is %i' % (self._pos))
             return Token(EOF, None)
 
+        elif self.current_char.isspace():
+            self.skip_whitespace()
+
+        elif self.current_char.isalpha():
+            token = self._id()
+            print ('Lexed %s, pos is %i' % (token, self._pos))
+            return token
+
+        elif self.current_char == ':' and self.peek() == '=':
+            token = Token(ASSIGN, ':=')
+            self.advance()
+            self.advance()
+            print ('Lexed %s, pos is %i' % (token, self._pos))
+            return token
+
+        elif self.current_char == ';':
+            token = Token(SEMI, ';')
+            self.advance()
+            print ('Lexed %s, pos is %i' % (token, self._pos))
+            return token
+
+        elif self.current_char == '.':
+            token = Token(DOT, '.')
+            self.advance()
+            print ('Lexed %s, pos is %i' % (token, self._pos))
+            return token
+
         elif self.current_char.isdigit():
-            return Token(INTEGER, self.integer())
+            token = self.integer()
+            print ('Lexed %s, pos is %i' % (token, self._pos))
+            return token
 
         elif self.current_char in grouping_set:
-            token = Token('GROUP', self.current_char)
+            token = Token(GROUP, self.current_char)
             self.advance()
             print ('Lexed %s, pos is %i' % (self.current_char, self._pos))
             return token
@@ -86,3 +153,18 @@ class Lexer(object):
         else:
             raise Exception('Parsing Error at pos %i, character %s' %
                             (self._pos, self.text[self._pos]))
+
+
+if __name__ == "__main__":
+    while True:
+        try:
+            text = raw_input('Enter>')
+        except EOFError:
+            break
+        if not text:
+            continue
+        a = Lexer(text)
+        res = Token('DUMMY', 'DUMMY')
+        while res is None or res.type != EOF:
+            res = a.get_next_token()
+        print ''
