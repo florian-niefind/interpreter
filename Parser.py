@@ -7,9 +7,15 @@
 """
 Parser
 """
-from Token import INTEGER, OPERATOR1, OPERATOR2, GROUP, EOF, operator_set_pref1, operator_set_pref2
+from Token import (INTEGER, OPERATOR1, OPERATOR2, GROUP, EOF,
+                   BEGIN, END, DOT, ASSIGN, SEMI, ID,
+                   operator_set_pref1, operator_set_pref2)
 from Lexer import Lexer
 
+
+#######################################
+# Abstract syntax tree
+#######################################
 
 class AST(object):
 
@@ -17,6 +23,40 @@ class AST(object):
 
     def __init__(self):
         pass
+
+
+class Compound(AST):
+
+    """AST node for compound statements"""
+
+    def __init__(self):
+        """Constructor"""
+        self.children = []
+
+
+class Assign(AST):
+
+    """AST node for assign statements"""
+
+    def __init__(self, left, token, right):
+        """Constructor"""
+        self._token = token
+        self.left = left
+        self.right = right
+
+
+class Var(AST):
+
+    """AST node for variables"""
+
+    def __init__(self, token):
+        """Constructor
+
+        :token: TODO
+
+        """
+        self._token = token
+        self.id = token.value
 
 
 class BinOp(AST):
@@ -54,6 +94,15 @@ class UnOp(AST):
         self.expr = expr
 
 
+class NoOp(AST):
+
+    """AST node for empty operator"""
+
+    def __init__(self):
+        """TODO: to be defined1. """
+        pass
+
+
 class Num(AST):
 
     """AST node for a number"""
@@ -66,6 +115,10 @@ class Num(AST):
         self._token = token
         self.value = token.value
 
+
+#######################################
+# Parser
+#######################################
 
 class Parser(object):
 
@@ -87,11 +140,95 @@ class Parser(object):
                 self.current_token,
                 type))
 
+    def program(self):
+        """
+        Program rule: compound DOT
+
+        :returns: the full AST with a compound node as root
+        """
+        print 'PROGRAM'
+        node = self.compound()
+        self.eat(DOT)
+        return node
+
+    def compound(self):
+        """
+        Compound rule: BEGIN statement+ END
+
+        :returns: compound AST node
+        """
+        print 'COMPOUND'
+        self.eat(BEGIN)
+        node = Compound()
+
+        node.children.append(self.statement())
+
+        while self.current_token.type != END:
+            node.children.append(self.statement())
+
+        self.eat(END)
+        return node
+
+    def statement(self):
+        """
+        Statement rule: (compound | assign | empty) SEMI
+
+        :returns: AST node
+        """
+        print 'STATEMENT'
+        if self.current_token.type == BEGIN:
+            node = self.compound()
+        elif self.current_token.type == ID:
+            node = self.assign()
+        else:
+            node = self.empty()
+
+        if self.current_token.type == SEMI:
+            self.eat(SEMI)
+        elif self.current_token.type == END:
+            return node
+        else:
+            raise Exception(
+                'No SEMI or END at end of statement, something went wrong')
+
+    def assign(self):
+        """
+        Assign rule: ID ASSIGN expr
+
+        :returns: AST node
+        """
+        print 'ASSIGN'
+        left = self.variable()
+        token = self.current_token
+        self.eat(ASSIGN)
+        node = Assign(left, token, self.expr())
+        return node
+
+    def variable(self):
+        """
+        variable rule: ID
+
+        :returns: AST node
+        """
+        print 'VARIABLE'
+        node = Var(self.current_token)
+        self.eat(ID)
+        return node
+
+    def empty(self):
+        """
+        empty rule: NoOp
+
+        :returns: NoOp AST node
+        """
+        print 'EMPTY'
+        return NoOp()
+
     def factor(self):
         """
-        Factor rule: (UnOp factor | integer| (LPAREN expr RPAREN))
+        Factor rule: (UnOp factor | variable | INTEGER | (LPAREN expr RPAREN))
 
-        :return: value of the integer
+        :returns: Num AST node
         """
         print 'FACTOR'
         if self.current_token.value == '(':
@@ -106,13 +243,15 @@ class Parser(object):
             num_token = self.current_token
             self.eat(INTEGER)
             node = Num(num_token)
+        elif self.current_token.type == ID:
+            node = self.variable()
         return node
 
     def term(self):
         """
         Term rule: factor ((MUL|DIV) factor)+
 
-        :returns: Terms to be added
+        :returns: AST node
         """
         print 'TERM'
         node = self.factor()
@@ -127,9 +266,9 @@ class Parser(object):
 
     def expr(self):
         """
-        Expr rule: term ((ADD|SUB) term)+ EOF
+        Expr rule: term ((ADD|SUB) term)+
 
-        :returns: TODO
+        :returns: AST node
 
         """
         print 'EXPR'
@@ -141,13 +280,27 @@ class Parser(object):
             self.eat(OPERATOR2)
             node = BinOp(node, op_token, self.term())
 
-        if self.current_token.type in [EOF, GROUP]:
-            return node
-        else:
-            raise Exception('No EOF at end of input, something went wrong')
+        return node
 
     def parse(self):
 
         # read first token
         self.current_token = self.lexer.get_next_token()
-        return self.expr()
+        node = self.program()
+        if self.current_token.type == EOF:
+            return node
+        else:
+            raise Exception('No EOF at end of input, something went wrong')
+
+
+if __name__ == "__main__":
+    while True:
+        try:
+            text = raw_input('Enter>')
+        except EOFError:
+            break
+        if not text:
+            continue
+        a = Parser(text)
+        a.parse()
+        print ''
