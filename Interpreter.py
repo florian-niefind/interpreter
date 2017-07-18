@@ -9,6 +9,8 @@ Interpreter
 """
 from Parser import Parser
 
+GLOBALS = {}
+
 
 class NodeVisitor(object):
 
@@ -40,6 +42,49 @@ class Interpreter(NodeVisitor):
 
     def __init__(self, text):
         self.parser = Parser(text)
+
+    def visit_Compound(self, node):
+        """Visitor for compound node
+
+        :node: AST node to be interpreted
+        :returns: result of all children
+
+        """
+        print("( compound "),
+        for child in node.children:
+            self.visit(child)
+        print(")"),
+
+    def visit_Assign(self, node):
+        """Visitor for assign node
+
+        :node: AST node to be interpreted
+        :returns: result of all children
+
+        """
+        print("("),
+        print("="),
+        print node.left.id,
+        # GLOBALS[node.left.id] = self.visit(node.right)
+        self.visit(node.right)
+        print(")"),
+
+    def visit_Var(self, node):
+        """Visitor for var node
+
+        :node: AST node to be interpreted
+        :returns: result of all children
+
+        """
+        print node.id,
+        '''
+        val = GLOBALS.get(node.id)
+        if val is None:
+            raise NameError("Variable %s referenced before assignment" %
+                            node.id)
+        else:
+            return val
+        '''
 
     def visit_BinOp(self, node):
         """Visitor for binary operator node
@@ -74,6 +119,14 @@ class Interpreter(NodeVisitor):
 
         """
         print node.value,
+
+    def visit_NoOp(self, node):
+        """Visitor for NoOp node
+
+        :node: AST node to be interpreted
+        :returns: result of all children
+        """
+        pass
 
     def interpret(self):
         """

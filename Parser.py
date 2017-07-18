@@ -185,6 +185,7 @@ class Parser(object):
 
         if self.current_token.type == SEMI:
             self.eat(SEMI)
+            return node
         elif self.current_token.type == END:
             return node
         else:
@@ -261,8 +262,7 @@ class Parser(object):
             self.eat(OPERATOR1)
             node = BinOp(node, op_token, self.factor())
 
-        if self.current_token.type in [EOF, OPERATOR2, GROUP]:
-            return node
+        return node
 
     def expr(self):
         """
